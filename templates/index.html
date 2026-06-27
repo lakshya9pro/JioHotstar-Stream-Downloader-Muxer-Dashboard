@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotstar Stream Downloader & Muxer Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #080511;
+            --card-bg: rgba(18, 13, 33, 0.65);
+            --primary-glow: #8a2be2;
+            --accent-glow: #00ffff;
+            --text-color: #f3f0fc;
+            --text-muted: #a099b5;
+            --terminal-bg: #040207;
+            --border-color: rgba(138, 43, 226, 0.25);
+            --success-color: #00ffcc;
+            --error-color: #ff3366;
+            --input-bg: rgba(6, 4, 12, 0.85);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: radial-gradient(circle at 50% 30%, #1c0f38 0%, var(--bg-color) 80%);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px 10px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 950px;
+            z-index: 10;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff 10%, #b592ff 50%, #00ffff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+            letter-spacing: -0.8px;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            font-weight: 300;
+        }
+
+        .main-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5), 
+                        0 0 50px rgba(138, 43, 226, 0.15);
+            animation: scaleIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 140px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 15px;
+            color: #fff;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            resize: vertical;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.6);
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-glow);
+            box-shadow: 0 0 15px rgba(138, 43, 226, 0.35), inset 0 2px 10px rgba(0,0,0,0.6);
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary-glow) 0%, #a044ff 100%);
+            border: none;
+            border-radius: 14px;
+            padding: 16px;
+            color: white;
+            font-weight: 700;
+            font-size: 1.05rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 20px rgba(138, 43, 226, 0.25);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            gap: 10px;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px rgba(138, 43, 226, 0.35), 
+                        0 0 25px rgba(0, 255, 255, 0.25);
+            background: linear-gradient(135deg, #9430ff 0%, #b361ff 100%);
+        }
+
+        .btn:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        .btn:disabled {
+            background: #201a30;
+            color: var(--text-muted);
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-analyze {
+            background: linear-gradient(135deg, #2b8ae2 0%, #00ffff 100%);
+            color: #080511;
+            box-shadow: 0 10px 20px rgba(0, 255, 255, 0.15);
+        }
+        
+        .btn-analyze:hover:not(:disabled) {
+            background: linear-gradient(135deg, #3fa1fa 0%, #33ffff 100%);
+            box-shadow: 0 15px 25px rgba(0, 255, 255, 0.25), 
+                        0 0 25px rgba(138, 43, 226, 0.2);
+        }
+
+        /* Alert and Info Banners */
+        .alert-banner {
+            background: rgba(255, 165, 0, 0.08);
+            border: 1px solid rgba(255, 165, 0, 0.25);
+            border-radius: 12px;
+            padding: 12px 18px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: #ffb835;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .alert-banner.info {
+            background: rgba(0, 255, 255, 0.04);
+            border: 1px solid rgba(0, 255, 255, 0.25);
+            color: var(--accent-glow);
+        }
+
+        /* Dashboard controls container */
+        .dashboard-panel {
+            margin-top: 25px;
+            display: none;
+            animation: slideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .dashboard-card {
+            background: rgba(10, 7, 20, 0.7);
+            border: 1px solid rgba(138, 43, 226, 0.2);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .dashboard-card h3 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 8px;
+        }
+
+        .dashboard-card h3 .icon {
+            margin-right: 8px;
+            font-size: 1.15rem;
+        }
+
+        .card-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 8px;
+        }
+
+        .card-header-row h3 {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .select-all-btn {
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid rgba(0, 255, 255, 0.25);
+            color: var(--accent-glow);
+            padding: 4px 12px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .select-all-btn:hover {
+            background: rgba(0, 255, 255, 0.15);
+            border-color: var(--accent-glow);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        .chip-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 6px 14px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .chip:hover {
+            background: rgba(138, 43, 226, 0.12);
+            border-color: rgba(138, 43, 226, 0.4);
+            color: #fff;
+        }
+
+        .chip.active {
+            background: linear-gradient(135deg, rgba(138, 43, 226, 0.4) 0%, rgba(0, 255, 255, 0.15) 100%);
+            border-color: var(--accent-glow);
+            box-shadow: 0 0 12px rgba(0, 255, 255, 0.25);
+            color: #fff;
+            font-weight: 600;
+        }
+
+        /* Settings group */
+        .settings-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .settings-group label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 0;
+        }
+
+        .settings-group input[type="text"] {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: #fff;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .settings-group input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary-glow);
+            box-shadow: 0 0 8px rgba(138, 43, 226, 0.3);
+        }
+
+        .mode-selector {
+            display: flex;
+            background: rgba(5, 3, 10, 0.7);
+            border: 1px solid rgba(138, 43, 226, 0.2);
+            border-radius: 10px;
+            padding: 3px;
+            gap: 2px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, var(--primary-glow) 0%, #a044ff 100%);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(138, 43, 226, 0.3);
+        }
+
+        .checkbox-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .checkbox-container input {
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary-glow);
+        }
+
+        /* Real-time details card */
+        .details-panel {
+            background: rgba(10, 6, 20, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 14px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .details-row {
+            display: flex;
+            margin-bottom: 6px;
+        }
+
+        .details-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .details-label {
+            width: 140px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .details-value {
+            flex: 1;
+            word-break: break-all;
+        }
+
+        /* Terminal styling */
+        .terminal-container {
+            margin-top: 25px;
+            display: none;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+        }
+
+        .terminal-header {
+            background: #100b21;
+            padding: 12px 18px;
+            display: flex;
+            align-items: center;
+        }
+
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .dot-red { background: #ff5f56; }
+        .dot-yellow { background: #ffbd2e; }
+        .dot-green { background: #27c93f; }
+
+        .terminal-title {
+            margin-left: 10px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-family: 'Fira Code', monospace;
+        }
+
+        .terminal-body {
+            height: 280px;
+            background: var(--terminal-bg);
+            padding: 20px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            overflow-y: auto;
+            color: #d1cbdc;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            scroll-behavior: smooth;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-left: auto;
+        }
+
+        .status-idle { background: #2b283a; color: #a59fb8; }
+        .status-running { background: rgba(138, 43, 226, 0.25); color: #c49eff; }
+        .status-success { background: rgba(0, 255, 204, 0.15); color: var(--success-color); }
+        .status-error { background: rgba(255, 51, 102, 0.15); color: var(--error-color); }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.97);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.15);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(138, 43, 226, 0.35);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(138, 43, 226, 0.55);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Hotstar Stream Downloader</h1>
+            <p class="subtitle">Full Dashboard: Extract, select multiple languages/qualities, and download individual or merged streams</p>
+        </header>
+
+        <div class="main-card">
+            <!-- Warning Banner -->
+            <div id="alert-banner" class="alert-banner">
+                <span style="font-size: 1.2rem;">⚠️</span>
+                <span id="alert-msg"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="headers-input">Paste DevTools Headers or MPD XML</label>
+                <textarea id="headers-input" placeholder="Paste Chrome/Firefox Developer Tools headers here for the .mpd request...&#10;Or paste raw MPD XML directly..."></textarea>
+            </div>
+
+            <button id="analyze-btn" class="btn btn-analyze">
+                <span>🔍</span> Analyze Stream & Get Formats
+            </button>
+
+            <!-- Details Panel parsed in real-time -->
+            <div id="details-panel" class="details-panel" style="margin-top: 20px;">
+                <div class="details-row">
+                    <div class="details-label">URL Detected:</div>
+                    <div id="detected-url" class="details-value">-</div>
+                </div>
+                <div class="details-row">
+                    <div class="details-label">Cookie Status:</div>
+                    <div id="detected-cookie" class="details-value">-</div>
+                </div>
+                <div class="details-row">
+                    <div class="details-label">User Agent:</div>
+                    <div id="detected-ua" class="details-value">-</div>
+                </div>
+            </div>
+
+            <!-- Dynamic Dashboard (Revealed after analysis) -->
+            <div id="dashboard-panel" class="dashboard-panel">
+                <div class="dashboard-grid">
+                    <!-- Video Quality Card -->
+                    <div class="dashboard-card">
+                        <h3><span class="icon">🎬</span> Video Quality</h3>
+                        <div id="quality-selector" class="chip-grid">
+                            <!-- Populated Dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Audio Languages Card -->
+                    <div class="dashboard-card">
+                        <div class="card-header-row">
+                            <h3><span class="icon">🔊</span> Audio Languages</h3>
+                            <button type="button" class="select-all-btn" id="audio-select-all">Select All</button>
+                        </div>
+                        <div id="audio-selector" class="chip-grid">
+                            <!-- Populated Dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <!-- Subtitles Card -->
+                    <div class="dashboard-card">
+                        <div class="card-header-row">
+                            <h3><span class="icon">💬</span> Subtitles</h3>
+                            <button type="button" class="select-all-btn" id="subs-select-all">Select All</button>
+                        </div>
+                        <div id="subs-selector" class="chip-grid">
+                            <!-- Populated Dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Config Card -->
+                    <div class="dashboard-card">
+                        <h3><span class="icon">⚙️</span> Downloader Configuration</h3>
+                        
+                        <div class="settings-group">
+                            <label>Download Mode</label>
+                            <div class="mode-selector">
+                                <button type="button" class="mode-btn active" id="mode-mux">Mux into MKV</button>
+                                <button type="button" class="mode-btn" id="mode-individual">Individual Tracks</button>
+                            </div>
+                        </div>
+
+                        <div class="settings-group" style="margin-top: 10px;">
+                            <label for="output-filename">Output Filename</label>
+                            <input type="text" id="output-filename" value="hotstar_video" placeholder="e.g. hotstar_video">
+                        </div>
+
+                        <div class="checkbox-row" style="margin-top: 10px;">
+                            <label class="checkbox-container">
+                                <input type="checkbox" id="chk-embed-metadata" checked>
+                                Embed Metadata
+                            </label>
+                            
+                            <label class="checkbox-container" id="lbl-embed-subs">
+                                <input type="checkbox" id="chk-embed-subs" checked>
+                                Embed Subtitles
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Generated command visualization -->
+                <div class="form-group" style="margin-top: 25px;">
+                    <label for="command-output">Dynamic yt-dlp Command Preview</label>
+                    <textarea id="command-output" readonly style="height: 100px; font-size: 0.8rem; background: rgba(0, 0, 0, 0.75); color: #00ffcc; border-color: rgba(0, 255, 204, 0.25); font-family: 'Fira Code', monospace; padding: 12px; box-shadow: inset 0 2px 5px rgba(0,0,0,0.8);"></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 15px; margin-bottom: 10px;">
+                    <button id="copy-btn" class="btn" style="flex: 1; background: linear-gradient(135deg, #00ffcc 0%, #00bcff 100%); color: #0a0716; font-weight: 700; box-shadow: 0 5px 15px rgba(0, 255, 204, 0.2);">
+                        <span>📋</span> Copy Command
+                    </button>
+                    <button id="download-btn" class="btn" style="flex: 1.5;">
+                        <span>🚀</span> Start Server Download
+                    </button>
+                </div>
+            </div>
+
+            <!-- Terminal log window -->
+            <div id="terminal-container" class="terminal-container">
+                <div class="terminal-header">
+                    <div class="terminal-dot dot-red"></div>
+                    <div class="terminal-dot dot-yellow"></div>
+                    <div class="terminal-dot dot-green"></div>
+                    <div class="terminal-title">downloader_console.log</div>
+                    <span id="status-badge" class="status-badge status-idle">Idle</span>
+                </div>
+                <div id="terminal-body" class="terminal-body"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State storage
+        let manifestData = {
+            detectedUrl: '',
+            cookieDetected: false,
+            userAgent: 'Default',
+            videoQualities: [],
+            audioLanguages: [],
+            subtitles: []
+        };
+
+        // DOM elements
+        const headersInput = document.getElementById('headers-input');
+        const analyzeBtn = document.getElementById('analyze-btn');
+        const alertBanner = document.getElementById('alert-banner');
+        const alertMsg = document.getElementById('alert-msg');
+        
+        const detailsPanel = document.getElementById('details-panel');
+        const detectedUrlEl = document.getElementById('detected-url');
+        const detectedCookieEl = document.getElementById('detected-cookie');
+        const detectedUaEl = document.getElementById('detected-ua');
+        
+        const dashboardPanel = document.getElementById('dashboard-panel');
+        const qualitySelector = document.getElementById('quality-selector');
+        const audioSelector = document.getElementById('audio-selector');
+        const subsSelector = document.getElementById('subs-selector');
+        
+        const audioSelectAll = document.getElementById('audio-select-all');
+        const subsSelectAll = document.getElementById('subs-select-all');
+        
+        const modeMux = document.getElementById('mode-mux');
+        const modeIndividual = document.getElementById('mode-individual');
+        const outputFilename = document.getElementById('output-filename');
+        const chkEmbedMetadata = document.getElementById('chk-embed-metadata');
+        const chkEmbedSubs = document.getElementById('chk-embed-subs');
+        const lblEmbedSubs = document.getElementById('lbl-embed-subs');
+        
+        const commandOutput = document.getElementById('command-output');
+        const copyBtn = document.getElementById('copy-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        
+        const terminalContainer = document.getElementById('terminal-container');
+        const terminalBody = document.getElementById('terminal-body');
+        const statusBadge = document.getElementById('status-badge');
+
+        let activeMode = 'mux'; // 'mux' or 'individual'
+
+        // Set up Listeners for Configuration changes
+        [outputFilename, chkEmbedMetadata, chkEmbedSubs].forEach(el => {
+            el.addEventListener('input', updateCommandPreview);
+            el.addEventListener('change', updateCommandPreview);
+        });
+
+        modeMux.addEventListener('click', () => {
+            activeMode = 'mux';
+            modeMux.classList.add('active');
+            modeIndividual.classList.remove('active');
+            lblEmbedSubs.style.display = 'flex';
+            updateCommandPreview();
+        });
+
+        modeIndividual.addEventListener('click', () => {
+            activeMode = 'individual';
+            modeIndividual.classList.add('active');
+            modeMux.classList.remove('active');
+            lblEmbedSubs.style.display = 'none'; // Subtitles can't be embedded if not muxing
+            updateCommandPreview();
+        });
+
+        // Toggle select all audio tracks
+        audioSelectAll.addEventListener('click', () => {
+            const chips = audioSelector.querySelectorAll('.chip');
+            const allActive = Array.from(chips).every(c => c.classList.contains('active'));
+            chips.forEach(c => {
+                if (allActive) {
+                    c.classList.remove('active');
+                } else {
+                    c.classList.add('active');
+                }
+            });
+            audioSelectAll.textContent = allActive ? 'Select All' : 'Deselect All';
+            updateCommandPreview();
+        });
+
+        // Toggle select all subtitle tracks
+        subsSelectAll.addEventListener('click', () => {
+            const chips = subsSelector.querySelectorAll('.chip');
+            const allActive = Array.from(chips).every(c => c.classList.contains('active'));
+            chips.forEach(c => {
+                if (allActive) {
+                    c.classList.remove('active');
+                } else {
+                    c.classList.add('active');
+                }
+            });
+            subsSelectAll.textContent = allActive ? 'Select All' : 'Deselect All';
+            updateCommandPreview();
+        });
+
+        // Send headers/XML to Flask backend for parsing
+        analyzeBtn.addEventListener('click', async () => {
+            const rawHeaders = headersInput.value.trim();
+            if (!rawHeaders) {
+                showAlert('Please paste the network headers or MPD XML before analyzing.');
+                return;
+            }
+
+            hideAlert();
+            analyzeBtn.disabled = true;
+            analyzeBtn.innerHTML = '<span>⏳</span> Parsing Manifest & Extracting Tracks...';
+
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ headers: rawHeaders })
+                });
+
+                const data = await response.json();
+                if (!response.ok || data.status !== 'ok') {
+                    throw new Error(data.error || 'Failed to parse the manifest details.');
+                }
+
+                // Hydrate state
+                manifestData.detectedUrl = data.detected_url;
+                manifestData.cookieDetected = data.detected_cookie;
+                manifestData.userAgent = data.detected_ua;
+                manifestData.videoQualities = data.video_qualities || [];
+                manifestData.audioLanguages = data.audio_languages || [];
+                manifestData.subtitles = data.subtitles || [];
+
+                // Display info panel
+                detectedUrlEl.textContent = manifestData.detectedUrl.length > 90 ? manifestData.detectedUrl.substring(0, 90) + '...' : manifestData.detectedUrl;
+                detectedCookieEl.textContent = manifestData.cookieDetected ? 'Found (Authenticating Requests)' : 'Not Found';
+                detectedCookieEl.style.color = manifestData.cookieDetected ? '#00ffcc' : '#ff3366';
+                detectedUaEl.textContent = manifestData.userAgent;
+                detailsPanel.style.display = 'block';
+
+                // Display warning if falling back to static MPD
+                if (data.used_fallback) {
+                    showAlert('Direct stream retrieval failed (likely URL expired). Using cached offline manifest details from "New Text Document.txt" for sandbox preview.', 'info');
+                }
+
+                // Render dynamic selectors
+                renderVideoQualities(manifestData.videoQualities);
+                renderAudioLanguages(manifestData.audioLanguages);
+                renderSubtitles(manifestData.subtitles);
+
+                // Open dashboard panel
+                dashboardPanel.style.display = 'block';
+                updateCommandPreview();
+
+            } catch (err) {
+                showAlert(err.message);
+                dashboardPanel.style.display = 'none';
+                detailsPanel.style.display = 'none';
+            } finally {
+                analyzeBtn.disabled = false;
+                analyzeBtn.innerHTML = '<span>🔍</span> Analyze Stream & Get Formats';
+            }
+        });
+
+        // Rendering functions
+        function renderVideoQualities(qualities) {
+            qualitySelector.innerHTML = '';
+            
+            // Add 'Best' option
+            const bestChip = document.createElement('div');
+            bestChip.className = 'chip active';
+            bestChip.textContent = 'Best Quality';
+            bestChip.dataset.height = 'best';
+            bestChip.addEventListener('click', () => selectSingleQuality(bestChip));
+            qualitySelector.appendChild(bestChip);
+
+            qualities.forEach(q => {
+                const chip = document.createElement('div');
+                chip.className = 'chip';
+                chip.textContent = `${q.height}p (${(q.bandwidth / 1000000).toFixed(1)} Mbps)`;
+                chip.dataset.height = q.height + 'p';
+                chip.addEventListener('click', () => selectSingleQuality(chip));
+                qualitySelector.appendChild(chip);
+            });
+        }
+
+        function selectSingleQuality(selectedChip) {
+            qualitySelector.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+            selectedChip.classList.add('active');
+            updateCommandPreview();
+        }
+
+        function renderAudioLanguages(languages) {
+            audioSelector.innerHTML = '';
+            
+            if (languages.length === 0) {
+                audioSelector.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;">No audio tracks found.</span>';
+                return;
+            }
+
+            languages.forEach(lang => {
+                const chip = document.createElement('div');
+                chip.className = 'chip active'; // active by default
+                
+                // Map language codes to human names
+                const langName = getLanguageName(lang);
+                chip.textContent = `${langName} (${lang})`;
+                chip.dataset.lang = lang;
+                chip.addEventListener('click', () => {
+                    chip.classList.toggle('active');
+                    // Update Select All button state
+                    const allActive = Array.from(audioSelector.querySelectorAll('.chip')).every(c => c.classList.contains('active'));
+                    audioSelectAll.textContent = allActive ? 'Deselect All' : 'Select All';
+                    updateCommandPreview();
+                });
+                audioSelector.appendChild(chip);
+            });
+            audioSelectAll.textContent = 'Deselect All';
+        }
+
+        function renderSubtitles(subtitles) {
+            subsSelector.innerHTML = '';
+            
+            if (subtitles.length === 0) {
+                subsSelector.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;">No subtitles found.</span>';
+                return;
+            }
+
+            subtitles.forEach(sub => {
+                const chip = document.createElement('div');
+                chip.className = 'chip active'; // active by default
+                const subName = getLanguageName(sub);
+                chip.textContent = `${subName} (${sub})`;
+                chip.dataset.sub = sub;
+                chip.addEventListener('click', () => {
+                    chip.classList.toggle('active');
+                    const allActive = Array.from(subsSelector.querySelectorAll('.chip')).every(c => c.classList.contains('active'));
+                    subsSelectAll.textContent = allActive ? 'Deselect All' : 'Select All';
+                    updateCommandPreview();
+                });
+                subsSelector.appendChild(chip);
+            });
+            subsSelectAll.textContent = 'Deselect All';
+        }
+
+        // Map short ISO codes to full language names
+        function getLanguageName(code) {
+            const mapping = {
+                'en': 'English',
+                'hi': 'Hindi',
+                'te': 'Telugu',
+                'ta': 'Tamil',
+                'kn': 'Kannada',
+                'ml': 'Malayalam',
+                'bn': 'Bengali',
+                'mr': 'Marathi',
+                'bh': 'Bihari',
+                'bih': 'Bihari',
+                'eng': 'English'
+            };
+            return mapping[code.toLowerCase()] || code.toUpperCase();
+        }
+
+        // Construct command preview for UI display
+        function updateCommandPreview() {
+            if (!manifestData.detectedUrl) return;
+
+            const url = manifestData.detectedUrl;
+            const qualityChip = qualitySelector.querySelector('.chip.active');
+            const qualityVal = qualityChip ? qualityChip.dataset.height : 'best';
+            
+            // Selected Audios
+            const selectedAudioChips = audioSelector.querySelectorAll('.chip.active');
+            const selectedAudios = Array.from(selectedAudioChips).map(c => c.dataset.lang);
+            
+            // Selected Subtitles
+            const selectedSubChips = subsSelector.querySelectorAll('.chip.active');
+            const selectedSubs = Array.from(selectedSubChips).map(c => c.dataset.sub);
+
+            const filename = outputFilename.value.trim() || 'hotstar_video';
+            const embedMeta = chkEmbedMetadata.checked;
+            const embedSubsVal = chkEmbedSubs.checked;
+
+            // 1. Build Format selection
+            let video_fmt = "bv*";
+            if (qualityVal !== 'best') {
+                const height = qualityVal.replace('p', '');
+                video_fmt = `bv*[height=${height}]`;
+            }
+
+            let audio_fmt = "ba";
+            if (selectedAudios.length > 0) {
+                if (selectedAudios.length === manifestData.audioLanguages.length && manifestData.audioLanguages.length > 0) {
+                    audio_fmt = "mergeall[vcodec=none]";
+                } else {
+                    if (activeMode === 'mux') {
+                        audio_fmt = selectedAudios.map(l => `ba[language=${l}]`).join('+');
+                    } else {
+                        audio_fmt = selectedAudios.map(l => `ba[language=${l}]`).join(',');
+                    }
+                }
+            } else {
+                audio_fmt = ""; // no audio selected
+            }
+
+            let format_str = video_fmt;
+            if (audio_fmt) {
+                if (activeMode === 'mux') {
+                    format_str = `${video_fmt}+${audio_fmt}`;
+                } else {
+                    format_str = `${video_fmt},${audio_fmt}`;
+                }
+            }
+
+            // 2. Start Command Array
+            let cmdParts = [`yt-dlp`, `"${url}"`, `-f`, `"${format_str}"`];
+
+            // 3. Subtitles
+            if (selectedSubs.length > 0) {
+                cmdParts.push(`--write-subs`);
+                if (selectedSubs.length === manifestData.subtitles.length) {
+                    cmdParts.push(`--sub-langs`, `"all"`);
+                } else {
+                    cmdParts.push(`--sub-langs`, `"${selectedSubs.join(',')}"`);
+                }
+
+                if (activeMode === 'mux' && embedSubsVal) {
+                    cmdParts.push(`--embed-subs`);
+                }
+            }
+
+            // 4. Metadata
+            if (embedMeta) {
+                cmdParts.push(`--embed-metadata`);
+            }
+
+            // 5. Multi-streams flag
+            if (activeMode === 'mux' && selectedAudios.length > 0) {
+                cmdParts.push(`--audio-multistreams`);
+            }
+
+            // 6. Add Headers (shortened preview)
+            if (manifestData.userAgent && manifestData.userAgent !== 'Default') {
+                cmdParts.push(`--user-agent`, `"${manifestData.userAgent.substring(0, 30)}..."`);
+            }
+            if (manifestData.cookieDetected) {
+                cmdParts.push(`--add-header`, `"Cookie: <cookie_token>"`);
+            }
+
+            // 7. Output template
+            if (activeMode === 'mux') {
+                cmdParts.push(`-o`, `"${filename}.mkv"`);
+            } else {
+                cmdParts.push(`-o`, `"${filename}.%(format_id)s.%(ext)s"`);
+            }
+
+            commandOutput.value = cmdParts.join(' ');
+        }
+
+        // Copy button event listener
+        copyBtn.addEventListener('click', () => {
+            // Recalculate true copy command with full headers (using actual cookie value)
+            const rawHeaders = headersInput.value.trim();
+            const lines = rawHeaders.split('\n').map(l => l.trim());
+            const headers = {};
+            let i = 0;
+            while (i < lines.length) {
+                const line = lines[i];
+                if (line.startsWith(':') || (line && !line.startsWith('http') && i + 1 < lines.length && lines[i+1])) {
+                    headers[line.toLowerCase()] = lines[i+1];
+                    i += 2;
+                } else {
+                    i += 1;
+                }
+            }
+
+            const url = manifestData.detectedUrl;
+            const qualityChip = qualitySelector.querySelector('.chip.active');
+            const qualityVal = qualityChip ? qualityChip.dataset.height : 'best';
+            
+            const selectedAudioChips = audioSelector.querySelectorAll('.chip.active');
+            const selectedAudios = Array.from(selectedAudioChips).map(c => c.dataset.lang);
+            
+            const selectedSubChips = subsSelector.querySelectorAll('.chip.active');
+            const selectedSubs = Array.from(selectedSubChips).map(c => c.dataset.sub);
+
+            const filename = outputFilename.value.trim() || 'hotstar_video';
+            const embedMeta = chkEmbedMetadata.checked;
+            const embedSubsVal = chkEmbedSubs.checked;
+
+            let video_fmt = "bv*";
+            if (qualityVal !== 'best') {
+                const height = qualityVal.replace('p', '');
+                video_fmt = `bv*[height=${height}]`;
+            }
+
+            let audio_fmt = "ba";
+            if (selectedAudios.length > 0) {
+                if (selectedAudios.length === manifestData.audioLanguages.length && manifestData.audioLanguages.length > 0) {
+                    audio_fmt = "mergeall[vcodec=none]";
+                } else {
+                    if (activeMode === 'mux') {
+                        audio_fmt = selectedAudios.map(l => `ba[language=${l}]`).join('+');
+                    } else {
+                        audio_fmt = selectedAudios.map(l => `ba[language=${l}]`).join(',');
+                    }
+                }
+            } else {
+                audio_fmt = "";
+            }
+
+            let format_str = video_fmt;
+            if (audio_fmt) {
+                if (activeMode === 'mux') {
+                    format_str = `${video_fmt}+${audio_fmt}`;
+                } else {
+                    format_str = `${video_fmt},${audio_fmt}`;
+                }
+            }
+
+            let cmdParts = [`yt-dlp`, `"${url}"`, `-f`, `"${format_str}"`];
+
+            if (selectedSubs.length > 0) {
+                cmdParts.push(`--write-subs`);
+                if (selectedSubs.length === manifestData.subtitles.length) {
+                    cmdParts.push(`--sub-langs`, `"all"`);
+                } else {
+                    cmdParts.push(`--sub-langs`, `"${selectedSubs.join(',')}"`);
+                }
+                if (activeMode === 'mux' && embedSubsVal) {
+                    cmdParts.push(`--embed-subs`);
+                }
+            }
+
+            if (embedMeta) {
+                cmdParts.push(`--embed-metadata`);
+            }
+
+            if (activeMode === 'mux' && selectedAudios.length > 0) {
+                cmdParts.push(`--audio-multistreams`);
+            }
+
+            const ua = headers['user-agent'] || manifestData.userAgent;
+            if (ua && ua !== 'Default') {
+                cmdParts.push(`--user-agent`, `"${ua}"`);
+            }
+            if (headers['cookie']) {
+                cmdParts.push(`--add-header`, `"Cookie: ${headers['cookie']}"`);
+            }
+            if (headers['referer']) {
+                cmdParts.push(`--add-header`, `"Referer: ${headers['referer']}"`);
+            }
+            if (headers['origin']) {
+                cmdParts.push(`--add-header`, `"Origin: ${headers['origin']}"`);
+            }
+
+            if (activeMode === 'mux') {
+                cmdParts.push(`-o`, `"${filename}.mkv"`);
+            } else {
+                cmdParts.push(`-o`, `"${filename}.%(format_id)s.%(ext)s"`);
+            }
+
+            const fullCommand = cmdParts.join(' ');
+            
+            // Perform copy
+            const el = document.createElement('textarea');
+            el.value = fullCommand;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+
+            const originalText = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<span>✅</span> Copied Full Command!';
+            copyBtn.style.background = 'linear-gradient(135deg, #00ff66 0%, #00ffcc 100%)';
+            setTimeout(() => {
+                copyBtn.innerHTML = originalText;
+                copyBtn.style.background = 'linear-gradient(135deg, #00ffcc 0%, #00bcff 100%)';
+            }, 2500);
+        });
+
+        // Start server download process
+        downloadBtn.addEventListener('click', async () => {
+            // Extract options
+            const qualityChip = qualitySelector.querySelector('.chip.active');
+            const quality = qualityChip ? qualityChip.dataset.height : 'best';
+
+            const selectedAudioChips = audioSelector.querySelectorAll('.chip.active');
+            const audio_langs = Array.from(selectedAudioChips).map(c => c.dataset.lang).join(',');
+
+            const selectedSubChips = subsSelector.querySelectorAll('.chip.active');
+            const sub_langs = Array.from(selectedSubChips).map(c => c.dataset.sub).join(',');
+
+            const mode = activeMode;
+            const embed_subs = chkEmbedSubs.checked ? 'true' : 'false';
+            const embed_metadata = chkEmbedMetadata.checked ? 'true' : 'false';
+            const output_name = outputFilename.value.trim() || 'hotstar_video';
+
+            // Build query params
+            const params = new URLSearchParams({
+                quality,
+                audio_langs: audio_langs || 'none',
+                sub_langs: sub_langs || 'none',
+                mode,
+                embed_subs,
+                embed_metadata,
+                output_name
+            });
+
+            // Lock UI controls
+            downloadBtn.disabled = true;
+            analyzeBtn.disabled = true;
+            headersInput.disabled = true;
+            statusBadge.className = 'status-badge status-running';
+            statusBadge.textContent = 'Running';
+            terminalContainer.style.display = 'block';
+            terminalBody.textContent = 'Connecting to download stream...\n';
+
+            try {
+                // Open EventSource connection
+                const eventSource = new EventSource(`/download?${params.toString()}`);
+                
+                eventSource.onmessage = function(event) {
+                    const data = event.data;
+                    
+                    if (data === '[DONE]') {
+                        eventSource.close();
+                        statusBadge.className = 'status-badge status-success';
+                        statusBadge.textContent = 'Completed';
+                        unlockUI();
+                        terminalBody.textContent += '\n\n>>> Download finished successfully!';
+                        terminalBody.scrollTop = terminalBody.scrollHeight;
+                    } else if (data.startsWith('[ERROR]')) {
+                        eventSource.close();
+                        statusBadge.className = 'status-badge status-error';
+                        statusBadge.textContent = 'Failed';
+                        unlockUI();
+                        terminalBody.textContent += `\n\n>>> ${data}`;
+                        terminalBody.scrollTop = terminalBody.scrollHeight;
+                    } else {
+                        // Append download console log
+                        terminalBody.textContent += data + '\n';
+                        terminalBody.scrollTop = terminalBody.scrollHeight;
+                    }
+                };
+
+                eventSource.onerror = function(err) {
+                    console.error('SSE Error:', err);
+                    eventSource.close();
+                    statusBadge.className = 'status-badge status-error';
+                    statusBadge.textContent = 'Failed';
+                    unlockUI();
+                    terminalBody.textContent += '\n\n>>> Connection lost to download server.';
+                    terminalBody.scrollTop = terminalBody.scrollHeight;
+                };
+
+            } catch (err) {
+                statusBadge.className = 'status-badge status-error';
+                statusBadge.textContent = 'Failed';
+                unlockUI();
+                terminalBody.textContent += `\nError initializing download: ${err.message}\n`;
+            }
+        });
+
+        // Helper UI functions
+        function unlockUI() {
+            downloadBtn.disabled = false;
+            analyzeBtn.disabled = false;
+            headersInput.disabled = false;
+        }
+
+        function showAlert(msg, type = 'error') {
+            alertMsg.textContent = msg;
+            alertBanner.className = 'alert-banner' + (type === 'info' ? ' info' : '');
+            alertBanner.style.display = 'flex';
+        }
+
+        function hideAlert() {
+            alertBanner.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
